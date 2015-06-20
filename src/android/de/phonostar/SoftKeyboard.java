@@ -3,6 +3,9 @@ package de.phonostar;
 import org.json.JSONArray;
 
 import android.content.Context;
+import android.graphics.Rect;
+import android.util.DisplayMetrics;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import org.apache.cordova.CallbackContext;
@@ -15,19 +18,26 @@ public class SoftKeyboard extends CordovaPlugin {
 
     public void showKeyBoard() {
       InputMethodManager mgr = (InputMethodManager) cordova.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-      mgr.showSoftInput(webView, InputMethodManager.SHOW_IMPLICIT);
-
-      ((InputMethodManager) cordova.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE)).showSoftInput(webView, 0);
+      mgr.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
     }
 
     public void hideKeyBoard() {
       InputMethodManager mgr = (InputMethodManager) cordova.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-      mgr.hideSoftInputFromWindow(webView.getWindowToken(), 0);
+      mgr.hideSoftInputFromWindow(((View) webView).getWindowToken(), 0);
+      
     }
 
     public boolean isKeyBoardShowing() {
-      int heightDiff = webView.getRootView().getHeight() - webView.getHeight();
-      return (100 < heightDiff); // if more than 100 pixels, its probably a keyboard...
+      final View rootView = cordova.getActivity().getWindow().getDecorView().findViewById(android.R.id.content).getRootView();
+      Rect r = new Rect();
+      rootView.getWindowVisibleDisplayFrame(r);
+      int heightDiff = rootView.getRootView().getHeight() - (r.bottom);
+      DisplayMetrics dm = new DisplayMetrics();
+      cordova.getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+      final float density = dm.density;
+      int pixelHeightDiff = (int)(heightDiff / density);
+      
+      return (100 < pixelHeightDiff); // if more than 100 pixels, its probably a keyboard...
     }
 
     @Override
